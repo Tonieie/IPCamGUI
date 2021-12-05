@@ -46,14 +46,19 @@ class MyApp(QMainWindow):
         self.logo_img = QtGui.QImage(self.logo_img.data, self.logo_img.shape[1], self.logo_img.shape[0], QtGui.QImage.Format_RGBA8888).rgbSwapped()
         self.ui.logo_img.setPixmap(QtGui.QPixmap.fromImage(self.logo_img))
 
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.getImg)
-        self.timer.start(1)
-
         self.fullsrc_btn = FullScreenButton(parent=self.ui.label)
         self.fullsrc_btn.clicked.connect(self.fullsrc_btn_clicked)
 
         self.ui.recordButton.stateChanged.connect(self.record_btn_clicked)
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.getImg)
+        self.timer.start(1)
+
+        self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
+        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
+        self.setupRecPic()
+
 
     def fullsrc_btn_clicked(self):
         if self.ui.label.isFullScreen():
@@ -74,16 +79,17 @@ class MyApp(QMainWindow):
             self.rec_flag = False
          
     def getImg(self):
-        # self.ret,self.image = self.vcap.read()
-        self.orig_img = cv2.imread("../img/camcap.jpg")
-        if self.rec_flag:
-            self.vwrite.write(self.orig_img)
-            self.addRecPic()
+        # self.orig_img = cv2.imread("../img/camcap.jpg")
+        self.ret,self.orig_img = self.vcap.read()
         
         if self.ui.label.isFullScreen():
             self.disp_img = cv2.resize(self.orig_img,(1920,1080),interpolation= cv2.INTER_AREA)
         else:
             self.disp_img = cv2.resize(self.orig_img,(1600,900),interpolation= cv2.INTER_AREA)
+
+        if self.rec_flag:
+            self.vwrite.write(self.orig_img)
+            self.addRecPic()
 
         self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
         self.ui.label.setPixmap(QtGui.QPixmap.fromImage(self.disp_img))
@@ -103,8 +109,8 @@ class MyApp(QMainWindow):
 
     def addRecPic(self):
         for c in range(0, 3):
-            self.image[self.y1:self.y2, self.x1:self.x2, c] = ( self.alpha_s * self.s_img[:, :, c] +
-                                self.alpha_l * self.image[self.y1:self.y2, self.x1:self.x2, c])
+            self.disp_img[self.y1:self.y2, self.x1:self.x2, c] = ( self.alpha_s * self.s_img[:, :, c] +
+                                self.alpha_l * self.disp_img[self.y1:self.y2, self.x1:self.x2, c])
 
 
 if __name__ == '__main__':
