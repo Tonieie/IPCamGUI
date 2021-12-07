@@ -56,7 +56,7 @@ class MyApp(QMainWindow):
         self.timer.start(1)
 
         self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
-        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
+        # self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554/MJPG?W=720&H=400&Q=50&BR=5000000/track1")
         self.setupRecPic()
 
 
@@ -64,7 +64,7 @@ class MyApp(QMainWindow):
         if self.ui.label.isFullScreen():
             self.ui.label.setWindowFlag(QtCore.Qt.Window,False)
             self.ui.label.show()
-            self.fullsrc_btn.update_position()
+            # self.fullsrc_btn.update_position()
 
         else:
             self.ui.label.setWindowFlag(QtCore.Qt.Window,True)
@@ -79,13 +79,10 @@ class MyApp(QMainWindow):
             self.rec_flag = False
          
     def getImg(self):
-        # self.orig_img = cv2.imread("../img/camcap.jpg")
-        self.ret,self.orig_img = self.vcap.read()
+        self.orig_img = cv2.imread("../img/camcap.jpg")
+        # self.ret,self.orig_img = self.vcap.read()
         
-        if self.ui.label.isFullScreen():
-            self.disp_img = cv2.resize(self.orig_img,(1920,1080),interpolation= cv2.INTER_AREA)
-        else:
-            self.disp_img = cv2.resize(self.orig_img,(1600,900),interpolation= cv2.INTER_AREA)
+        self.disp_img = cv2.resize(self.orig_img,(self.ui.label.width,self.ui.label.height()),interpolation= cv2.INTER_AREA)
 
         if self.rec_flag:
             self.vwrite.write(self.orig_img)
