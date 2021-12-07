@@ -1,8 +1,9 @@
 import sys
 import time
+import datetime
 import cv2
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QPushButton, QWidget, QApplication, QMainWindow
+from PyQt5.QtWidgets import QLabel, QPushButton, QWidget, QApplication, QMainWindow
 from mainwindow import Ui_MainWindow
 
 class FullScreenButton(QPushButton):
@@ -11,12 +12,12 @@ class FullScreenButton(QPushButton):
         super().__init__(parent)
         self.paddingLeft = 5
         self.paddingTop = 5
-        self.resize(64,64)
+        self.resize(48,48)
         self.pix = QtGui.QPixmap(QtGui.QPixmap("../img/fullscreen.png"))
-        self.pix.scaled(64,64,QtCore.Qt.KeepAspectRatio)
+        self.pix.scaled(48,48,QtCore.Qt.KeepAspectRatio)
         self.icon = QtGui.QIcon(self.pix)
         self.setIcon(self.icon)
-        self.setIconSize(QtCore.QSize(64,64))
+        self.setIconSize(QtCore.QSize(48,48))
         self.setStyleSheet("background-color: transparent;")
 
     def update_position(self): 
@@ -38,10 +39,38 @@ class FullScreenButton(QPushButton):
 
     def changeIcon(self,img_path):
         self.pix = QtGui.QPixmap(QtGui.QPixmap(img_path))
-        self.pix.scaled(64,64,QtCore.Qt.KeepAspectRatio)
+        self.pix.scaled(48,48,QtCore.Qt.KeepAspectRatio)
         self.icon = QtGui.QIcon(self.pix)
         self.setIcon(self.icon)
-        self.setIconSize(QtCore.QSize(64,64))
+        self.setIconSize(QtCore.QSize(48,48))
+
+class DurationLabel(QLabel):
+
+    def __init__(self,parent):
+        super().__init__(parent)
+        self.paddingLeft = 10
+        self.paddingTop = 10
+        self.resize(100,24)
+        self.setVisible(False)
+        self.setAlignment(QtCore.Qt.AlignRight or QtCore.Qt.AlignVCenter)
+        self.font = QtGui.QFont("Arial",18,QtGui.QFont.Bold)
+        self.setFont(self.font)
+        self.setStyleSheet("background-color: transparent; color: white;")
+
+
+    def update_position(self): 
+        if hasattr(self.parent(), 'viewport'):
+            parent_rect = self.parent().viewport().rect()
+        else:
+            parent_rect = self.parent().rect()
+
+        if not parent_rect:
+            return
+
+        x = parent_rect.width() - self.width() - self.paddingLeft
+        y = parent_rect.height() - self.height() - self.paddingTop 
+        self.setGeometry(x, y, self.width(), self.height())
+
 
 
 class MyApp(QMainWindow):
@@ -61,12 +90,15 @@ class MyApp(QMainWindow):
 
         self.ui.recordButton.stateChanged.connect(self.record_btn_clicked)
 
+        self.duration_label = DurationLabel(parent=self.ui.label)
+
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.getImg)
         self.timer.start(1)
 
         self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
-        # self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554/MJPG?W=720&H=400&Q=50&BR=5000000/track1")
+        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554/MJPG?W=720&H=400&Q=50&BR=5000000/track1")
         self.setupRecPic()
 
 
@@ -87,20 +119,23 @@ class MyApp(QMainWindow):
         if state == QtCore.Qt.Checked:
             self.start_time = time.time()
             self.rec_flag = True
+            self.duration_label.setVisible(True)
         else:
             self.rec_flag = False
+            self.duration_label.setVisible(False)
          
     def getImg(self):
-        self.orig_img = cv2.imread("../img/camcap.jpg")
-        # self.ret,self.orig_img = self.vcap.read()
+        # self.orig_img = cv2.imread("../img/camcap.jpg")
+        self.ret,self.orig_img = self.vcap.read()
         
         self.disp_img = cv2.resize(self.orig_img,(self.ui.label.width(),self.ui.label.height()),interpolation= cv2.INTER_AREA)
 
         if self.rec_flag:
             self.vwrite.write(self.orig_img)
-
-            cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
+            # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
             self.addRecPic()
+            self.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.start_time))))
+            self.duration_label.update_position()
 
         self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
         self.ui.label.setPixmap(QtGui.QPixmap.fromImage(self.disp_img))
