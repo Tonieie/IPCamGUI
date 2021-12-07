@@ -1,4 +1,5 @@
 import sys
+import time
 import cv2
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QPushButton, QWidget, QApplication, QMainWindow
@@ -35,6 +36,14 @@ class FullScreenButton(QPushButton):
         super().resizeEvent(event)
         self.update_position()
 
+    def changeIcon(self,img_path):
+        self.pix = QtGui.QPixmap(QtGui.QPixmap(img_path))
+        self.pix.scaled(64,64,QtCore.Qt.KeepAspectRatio)
+        self.icon = QtGui.QIcon(self.pix)
+        self.setIcon(self.icon)
+        self.setIconSize(QtCore.QSize(64,64))
+
+
 class MyApp(QMainWindow):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -65,15 +74,18 @@ class MyApp(QMainWindow):
         if self.ui.label.isFullScreen():
             self.ui.label.setWindowFlag(QtCore.Qt.Window,False)
             self.ui.label.show()
+            self.fullsrc_btn.changeIcon("../img/fullscreen.png")
             self.fullsrc_btn.update_position()
 
         else:
             self.ui.label.setWindowFlag(QtCore.Qt.Window,True)
             self.ui.label.showFullScreen()
+            self.fullsrc_btn.changeIcon("../img/windowed.png")
             self.fullsrc_btn.update_position()
 
     def record_btn_clicked(self,state): 
         if state == QtCore.Qt.Checked:
+            self.start_time = time.time()
             self.rec_flag = True
         else:
             self.rec_flag = False
@@ -86,6 +98,8 @@ class MyApp(QMainWindow):
 
         if self.rec_flag:
             self.vwrite.write(self.orig_img)
+
+            cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
             self.addRecPic()
 
         self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
