@@ -64,7 +64,7 @@ class MyApp(QMainWindow):
         if self.ui.label.isFullScreen():
             self.ui.label.setWindowFlag(QtCore.Qt.Window,False)
             self.ui.label.show()
-            # self.fullsrc_btn.update_position()
+            self.fullsrc_btn.update_position()
 
         else:
             self.ui.label.setWindowFlag(QtCore.Qt.Window,True)
