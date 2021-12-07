@@ -82,7 +82,7 @@ class MyApp(QMainWindow):
         self.orig_img = cv2.imread("../img/camcap.jpg")
         # self.ret,self.orig_img = self.vcap.read()
         
-        self.disp_img = cv2.resize(self.orig_img,(self.ui.label.width,self.ui.label.height()),interpolation= cv2.INTER_AREA)
+        self.disp_img = cv2.resize(self.orig_img,(self.ui.label.width(),self.ui.label.height()),interpolation= cv2.INTER_AREA)
 
         if self.rec_flag:
             self.vwrite.write(self.orig_img)
