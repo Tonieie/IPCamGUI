@@ -48,6 +48,7 @@ class MyApp(QMainWindow):
 
         self.fullsrc_btn = FullScreenButton(parent=self.ui.label)
         self.fullsrc_btn.clicked.connect(self.fullsrc_btn_clicked)
+        self.fullsrc_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
         self.ui.recordButton.stateChanged.connect(self.record_btn_clicked)
 
@@ -70,7 +71,6 @@ class MyApp(QMainWindow):
             self.ui.label.setWindowFlag(QtCore.Qt.Window,True)
             self.ui.label.showFullScreen()
             self.fullsrc_btn.update_position()
-
 
     def record_btn_clicked(self,state): 
         if state == QtCore.Qt.Checked:
