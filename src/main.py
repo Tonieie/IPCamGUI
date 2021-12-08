@@ -82,8 +82,7 @@ class MyThread(QtCore.QThread):
     
     def run(self):
         while True:
-            self.ret,self.orig_img = self.vcap.read()
-            self.disp_img = cv2.resize(self.orig_img,(self.parent.ui.label.width(),self.parent.ui.label.height()),interpolation= cv2.INTER_AREA)
+            self.ret,self.disp_img = self.vcap.read()
             # if self.rec_flag:
             #     self.vwrite.write(self.orig_img)
             #     # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
@@ -92,6 +91,7 @@ class MyThread(QtCore.QThread):
             #     self.duration_label.update_position()
 
             self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
+            self.disp_img = QtGui.QImage.scaled(self.disp_img,self.parent.ui.label.width(),self.parent.ui.label.height())
 
             self.finished.emit(self.disp_img)
 
@@ -101,7 +101,7 @@ class MyApp(QMainWindow):
         QWidget.__init__(self, parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        # self.rec_flag = False
+        self.rec_flag = False
 
         # self.logo_img = cv2.imread("../img/logo.png",-1)
         # self.logo_img = QtGui.QImage(self.logo_img.data, self.logo_img.shape[1], self.logo_img.shape[0], QtGui.QImage.Format_RGBA8888).rgbSwapped()
