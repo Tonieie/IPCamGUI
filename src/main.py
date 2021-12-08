@@ -71,6 +71,33 @@ class DurationLabel(QLabel):
         y = parent_rect.height() - self.height() - self.paddingTop 
         self.setGeometry(x, y, self.width(), self.height())
 
+class MyThread(QtCore.QThread):
+    
+    finished = QtCore.pyqtSignal(QtGui.QImage)
+
+    def __init__(self,parent):
+        super().__init__()
+        self.parent = parent
+        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554/MJPG?W=720&H=400&Q=50&BR=5000000/track1")
+    
+    def run(self):
+
+        while True:
+            # self.orig_img = cv2.imread("../img/camcap.jpg")
+            self.ret,self.orig_img = self.vcap.read()
+
+            self.disp_img = cv2.resize(self.orig_img,(self.parent.ui.label.width(),self.parent.ui.label.height()),interpolation= cv2.INTER_AREA)
+
+            # if self.rec_flag:
+            #     self.vwrite.write(self.orig_img)
+            #     # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
+            #     self.addRecPic()
+            #     self.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.start_time))))
+            #     self.duration_label.update_position()
+
+            self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
+
+            self.finished.emit(self.disp_img)
 
 
 class MyApp(QMainWindow):
@@ -92,13 +119,11 @@ class MyApp(QMainWindow):
 
         self.duration_label = DurationLabel(parent=self.ui.label)
 
-
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.getImg)
-        self.timer.start(1)
+        th = MyThread(self)
+        th.finished.connect(self.updateImg)
+        th.start()
 
         self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
-        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554/MJPG?W=720&H=400&Q=50&BR=5000000/track1")
         self.setupRecPic()
 
 
@@ -124,21 +149,8 @@ class MyApp(QMainWindow):
             self.rec_flag = False
             self.duration_label.setVisible(False)
          
-    def getImg(self):
-        # self.orig_img = cv2.imread("../img/camcap.jpg")
-        self.ret,self.orig_img = self.vcap.read()
-        
-        self.disp_img = cv2.resize(self.orig_img,(self.ui.label.width(),self.ui.label.height()),interpolation= cv2.INTER_AREA)
-
-        if self.rec_flag:
-            self.vwrite.write(self.orig_img)
-            # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
-            self.addRecPic()
-            self.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.start_time))))
-            self.duration_label.update_position()
-
-        self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
-        self.ui.label.setPixmap(QtGui.QPixmap.fromImage(self.disp_img))
+    def updateImg(self,img):
+        self.ui.label.setPixmap(QtGui.QPixmap.fromImage(img))
 
     def setupRecPic(self):
         self.s_img = cv2.imread("../img/rec.png", -1)
@@ -151,7 +163,6 @@ class MyApp(QMainWindow):
 
         self.alpha_s = self.s_img[:, :, 3] / 255.0
         self.alpha_l = 1.0 - self.alpha_s
-
 
     def addRecPic(self):
         for c in range(0, 3):
