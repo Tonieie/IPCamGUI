@@ -75,10 +75,10 @@ class MyThread(QtCore.QThread):
     
     finished = QtCore.pyqtSignal(QtGui.QImage)
 
-    def __init__(self,parent):
-        super().__init__()
+    def __init__(self,parent,vcap):
+        super().__init__(parent)
         self.parent = parent
-        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
+        self.vcap = vcap
     
     def run(self):
         while True:
@@ -115,9 +115,10 @@ class MyApp(QMainWindow):
 
         # self.duration_label = DurationLabel(parent=self.ui.label)
 
-        # th = MyThread(self)
-        # th.finished.connect(self.updateImg)
-        # th.start()
+        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
+        th = MyThread(self,self.vcap)
+        th.finished.connect(self.updateImg)
+        th.start()
 
         # self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
         # self.setupRecPic()
