@@ -123,7 +123,7 @@ class MyApp(QMainWindow):
         th.finished.connect(self.updateImg)
         th.start()
 
-        self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
+        # self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
         self.setupRecPic()
 
 
