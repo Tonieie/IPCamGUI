@@ -75,11 +75,12 @@ class MyThread(QtCore.QThread):
     
     finished = QtCore.pyqtSignal(QtGui.QImage)
 
-    def __init__(self,parent,vcap):
+    def __init__(self,parent):
         super().__init__(parent)
         self.parent = parent
-        self.vcap = vcap
-    
+        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
+        # self.vcap = cv2.VideoCapture("rtspsrc location=rtsp://192.168.1.1:554 latency=100 ! queue ! rtph264depay ! h264parse ! decobin ! videoconvert ! video/x-raw,width=1280,height=720 ! autovideosink")
+
     def run(self):
         while True:
             self.ret,self.disp_img = self.vcap.read()
@@ -91,7 +92,7 @@ class MyThread(QtCore.QThread):
             #     self.duration_label.update_position()
 
             self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
-            self.disp_img = QtGui.QImage.scaled(self.disp_img,self.parent.ui.label.width(),self.parent.ui.label.height())
+            # self.disp_img = QtGui.QImage.scaled(self.disp_img,self.parent.ui.label.width(),self.parent.ui.label.height())
 
             self.finished.emit(self.disp_img)
 
@@ -115,8 +116,7 @@ class MyApp(QMainWindow):
 
         # self.duration_label = DurationLabel(parent=self.ui.label)
 
-        self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
-        th = MyThread(self,self.vcap)
+        th = MyThread(self)
         th.finished.connect(self.updateImg)
         th.start()
 
