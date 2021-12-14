@@ -90,8 +90,8 @@ class MyThread(QtCore.QThread):
                 self.vwrite.write(self.disp_img)
                 # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
                 self.addRecPic()
-                # self.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.start_time))))
-                # self.duration_label.update_position()
+                self.parent.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.parent.start_time))))
+                self.parent.duration_label.update_position()
 
             self.disp_img = QtGui.QImage(self.disp_img.data, self.disp_img.shape[1], self.disp_img.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
             self.disp_img = QtGui.QImage.scaled(self.disp_img,self.parent.ui.label.width(),self.parent.ui.label.height())
@@ -132,7 +132,7 @@ class MyApp(QMainWindow):
 
         self.ui.recordButton.stateChanged.connect(self.record_btn_clicked)
 
-        # self.duration_label = DurationLabel(parent=self.ui.label)
+        self.duration_label = DurationLabel(parent=self.ui.label)
 
         th = MyThread(self)
         th.finished.connect(self.updateImg)
@@ -155,12 +155,12 @@ class MyApp(QMainWindow):
 
     def record_btn_clicked(self,state): 
         if state == QtCore.Qt.Checked:
-            # self.start_time = time.time()
+            self.start_time = time.time()
             self.rec_flag = True
-    #         self.duration_label.setVisible(True)
+            self.duration_label.setVisible(True)
         else:
             self.rec_flag = False
-    #         self.duration_label.setVisible(False)
+            self.duration_label.setVisible(False)
          
     def updateImg(self,img):
         self.ui.label.setPixmap(QtGui.QPixmap.fromImage(img))
