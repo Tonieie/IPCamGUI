@@ -128,7 +128,7 @@ class MyApp(QMainWindow):
         self.listFont = QtGui.QFont("Arial",14)
         self.ui.listWidget.setFont(self.listFont)
 
-        for item in os.listdir("../vid"):
+        for item in os.listdir("C:/Users/HP/Desktop/Video"):
             self.ui.listWidget.addItem(item)
 
 
@@ -163,14 +163,14 @@ class MyApp(QMainWindow):
     def record_btn_clicked(self,state): 
         if state == QtCore.Qt.Checked:
             self.vid_name = 'HeadCam--'+datetime.datetime.now().strftime("%d-%m-%Y--%H-%M-%S")+'.avi'
-            self.vwrite = cv2.VideoWriter('../vid/'+str(self.vid_name),cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
+            self.vwrite = cv2.VideoWriter('C:/Users/HP/Desktop/Video/'+str(self.vid_name),cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
             self.start_time = time.time()
             self.rec_flag = True
             self.duration_label.setVisible(True)
         else:
             self.rec_flag = False
             self.ui.listWidget.addItem(str(self.vid_name))
-            self.vwrite.release()
+            self.vwrite = None
             self.duration_label.setVisible(False)
          
     def updateImg(self,img):
