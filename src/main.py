@@ -89,7 +89,6 @@ class MyThread(QtCore.QThread):
             self.disp_img = cv2.rotate(self.disp_img,cv2.ROTATE_180)
             if self.parent.rec_flag:
                 self.parent.vwrite.write(self.disp_img)
-                # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
                 self.addRecPic()
                 self.parent.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.parent.start_time))))
                 self.parent.duration_label.update_position()
@@ -137,6 +136,7 @@ class MyApp(QMainWindow):
         self.fullsrc_btn.clicked.connect(self.fullsrc_btn_clicked)
         self.fullsrc_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
+
         self.ui.recordButton.stateChanged.connect(self.record_btn_clicked)
 
         self.duration_label = DurationLabel(parent=self.ui.label)
@@ -163,13 +163,14 @@ class MyApp(QMainWindow):
     def record_btn_clicked(self,state): 
         if state == QtCore.Qt.Checked:
             self.vid_name = 'HeadCam--'+datetime.datetime.now().strftime("%d-%m-%Y--%H-%M-%S")+'.avi'
-            self.vwrite = cv2.VideoWriter('../vid/'+str(self.vid_name),cv2.VideoWriter_fourcc('M','J','P','G'), 25, (1280,720)) 
+            self.vwrite = cv2.VideoWriter('../vid/'+str(self.vid_name),cv2.VideoWriter_fourcc('M','J','P','G'), 30, (1280,720)) 
             self.start_time = time.time()
             self.rec_flag = True
             self.duration_label.setVisible(True)
         else:
             self.rec_flag = False
             self.ui.listWidget.addItem(str(self.vid_name))
+            self.vwrite.release()
             self.duration_label.setVisible(False)
          
     def updateImg(self,img):
