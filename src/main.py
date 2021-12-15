@@ -1,5 +1,6 @@
 import sys
 import time
+import os
 import datetime
 import cv2
 from PyQt5 import QtCore, QtGui
@@ -80,14 +81,14 @@ class MyThread(QtCore.QThread):
         self.parent = parent
         self.vcap = cv2.VideoCapture("rtsp://192.168.1.1:554")
         # self.vcap = cv2.VideoCapture("rtspsrc location=rtsp://192.168.1.1:554 latency=100 ! queue ! rtph264depay ! h264parse ! decobin ! videoconvert ! video/x-raw,width=1280,height=720 ! autovideosink")
-        self.vwrite = cv2.VideoWriter('../vid/output.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 25, (1280,720)) 
         self.setupRecPic()
 
     def run(self):
         while True:
             self.ret,self.disp_img = self.vcap.read()
+            self.disp_img = cv2.rotate(self.disp_img,cv2.ROTATE_180)
             if self.parent.rec_flag:
-                self.vwrite.write(self.disp_img)
+                self.parent.vwrite.write(self.disp_img)
                 # cv2.putText(self.disp_img,str(int(time.time() - self.start_time)),(500,500),cv2.FONT_HERSHEY_COMPLEX,1,(255,255,255),1,2)
                 self.addRecPic()
                 self.parent.duration_label.setText(str(datetime.timedelta(seconds=int(time.time() - self.parent.start_time))))
@@ -125,6 +126,12 @@ class MyApp(QMainWindow):
         self.logo_img = cv2.imread("../img/logo.png",-1)
         self.logo_img = QtGui.QImage(self.logo_img.data, self.logo_img.shape[1], self.logo_img.shape[0], QtGui.QImage.Format_RGBA8888).rgbSwapped()
         self.ui.logo_img.setPixmap(QtGui.QPixmap.fromImage(self.logo_img))
+        self.listFont = QtGui.QFont("Arial",14)
+        self.ui.listWidget.setFont(self.listFont)
+
+        for item in os.listdir("../vid"):
+            self.ui.listWidget.addItem(item)
+
 
         self.fullsrc_btn = FullScreenButton(parent=self.ui.label)
         self.fullsrc_btn.clicked.connect(self.fullsrc_btn_clicked)
@@ -155,11 +162,14 @@ class MyApp(QMainWindow):
 
     def record_btn_clicked(self,state): 
         if state == QtCore.Qt.Checked:
+            self.vid_name = 'HeadCam--'+datetime.datetime.now().strftime("%d-%m-%Y--%H-%M-%S")+'.avi'
+            self.vwrite = cv2.VideoWriter('../vid/'+str(self.vid_name),cv2.VideoWriter_fourcc('M','J','P','G'), 25, (1280,720)) 
             self.start_time = time.time()
             self.rec_flag = True
             self.duration_label.setVisible(True)
         else:
             self.rec_flag = False
+            self.ui.listWidget.addItem(str(self.vid_name))
             self.duration_label.setVisible(False)
          
     def updateImg(self,img):
@@ -170,5 +180,6 @@ class MyApp(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     myapp = MyApp()
-    myapp.showFullScreen()
+    #myapp.showFullScreen()
+    myapp.showMaximized()
     sys.exit(app.exec_())
